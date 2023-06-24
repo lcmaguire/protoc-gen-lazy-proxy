@@ -1,5 +1,5 @@
 syntax = "proto3";
-// package tutorial; // todo rename and re gen to be different package
+package tutorial; 
 
 option go_package = "github.com/lcmaguire/protoc-gen-lazy-proxy/sample";
 
