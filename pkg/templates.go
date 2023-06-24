@@ -90,6 +90,11 @@ type {{.ServiceName}} struct {
 		URL
 		bool
 
+	INIT {}
+
+	struct {
+		.... all services
+	}
 */
 
 type LazyProxyServiceInfo struct {
