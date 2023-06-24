@@ -24,7 +24,6 @@ func main() {
 		panic
 	}
 	
-
 	mux.Handle(
 		sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn))
 	)
