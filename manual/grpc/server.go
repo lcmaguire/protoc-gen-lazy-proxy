@@ -1,10 +1,12 @@
 package main
 
 import (
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"context"
 	"log"
 	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample"
 )
@@ -16,7 +18,7 @@ func main() {
 }
 
 func run() error {
-	listenOn := "127.0.0.1:8080" // this should be passed in via config
+	listenOn := "127.0.0.1:8081" // this should be passed in via config
 	listener, err := net.Listen("tcp", listenOn)
 	if err != nil {
 		return err
@@ -25,7 +27,7 @@ func run() error {
 	server := grpc.NewServer()
 	// services in your protoFile
 
-	sample.RegisterSampleService(server, &sampleService{})
+	sample.RegisterSampleServiceServer(server, &sampleService{})
 	reflection.Register(server) // this should perhaps be optional
 
 	log.Println("Listening on", listenOn)
@@ -36,6 +38,10 @@ func run() error {
 	return nil
 }
 
-type sampleService struct{}
+type sampleService struct {
+	sample.UnimplementedSampleServiceServer
+}
 
-func (s *sampleService) Sample(ctx context.Context)
+func (s *sampleService) Sample(ctx context.Context, req *sample.SampleRequest) (*sample.SampleResponse, error) {
+	return &sample.SampleResponse{Name: req.Name + " from standard grpc server"}, nil
+}
