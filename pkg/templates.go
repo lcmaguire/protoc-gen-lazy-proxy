@@ -70,23 +70,48 @@ func New{{.ServiceName}} () *{{.ServiceName}} {
 }
 `
 
-// MethodTemplate template for an unimplemented unary connect-go gRPC method.
-const MethodTemplate = `
+// TODO decide either have one struct with n number of connections, or N number of structs with 1 connection.
+const LazyProxyService = `
+func new{{.ServiceName}}Service(cliConn *grpc.ClientConn) *{{.ServiceName}} {
+	return &{{.ServiceName}}{
+		cli: {{.Pkg}}.New{{.ServiceName}}Client(cliConn),
+	}
+}
 
-package {{.GoPkgName}}
+type {{.ServiceName}} struct {
+	{{.Pkg}}connect.Unimplemented{{.ServiceName}}Handler
+	cli {{.Pkg}}.{{.ServiceName}}Client
+}
+`
 
-import (
-	"context"
-	"errors"
-	connect_go "github.com/bufbuild/connect-go"
+/*
+	read config
+		ServiceName
+		URL
+		bool
 
-	{{.Imports}}
-)
+*/
 
-// {{.MethodName}} implements {{.FullName}}.
-func (s * {{.ServiceName}}) {{.MethodName}}(ctx context.Context, req *connect_go.Request[{{.RequestType}}]) (*connect_go.Response[{{.ResponseType}}], error) {
-	res := connect_go.NewResponse(&{{.ResponseType}}{})
-	return res, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("not yet implemented"))
+type LazyProxyServiceInfo struct {
+	ServiceName string
+	Pkg         string
+}
+
+const LazyProxyMethod = `
+func (s *{{.ServiceName}}) {{.MethodName}}(ctx context.Context, req *connect.Request[{{.RequestName}}]) (*connect.Response[{{.RequestResponse}}], error) {
+	// todo pass req.Header() -> ctx
+	// for headers desired, get -> write to outgoing metadata
+	res, err := s.cli.Sample(ctx, req.Msg)
+	return &connect.Response[{{.ResponseName}}]{
+		Msg: res,
+	}, err
 }
 
 `
+
+type LazyProxyMethodInfo struct {
+	ServiceName  string
+	MethodName   string
+	RequestName  string
+	ResponseName string
+}
