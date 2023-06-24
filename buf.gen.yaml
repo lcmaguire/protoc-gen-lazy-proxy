@@ -1,0 +1,11 @@
+version: v1
+plugins:
+  - name: go
+    out: example
+    opt: paths=source_relative
+  - name: connect-go
+    out: example
+    opt: paths=source_relative
+  - name: lazy-proxy
+    out: example
+    opt: paths=source_relative
