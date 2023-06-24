@@ -21,14 +21,14 @@ func main() {
 
 	sampleCliConn, err := grpcDial("localhost:8081", false)
 	if err != nil {
-		panic
+		panic(err)
 	}
-	
+
 	mux.Handle(
-		sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn))
+		sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
 	)
 
-	err := http.ListenAndServe(
+	err = http.ListenAndServe(
 		"localhost:8080",
 		// For gRPC clients, it's convenient to support HTTP/2 without TLS. You can
 		// avoid x/net/http2 by using http.ListenAndServeTLS.
@@ -54,7 +54,7 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 
 func newSampleService(cliConn *grpc.ClientConn) *sampleService {
 	return &sampleService{
-		cli: sample.NewSampleServiceClient(cliConn)
+		cli: sample.NewSampleServiceClient(cliConn),
 	}
 }
 
