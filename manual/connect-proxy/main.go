@@ -74,7 +74,7 @@ type sampleService struct {
 
 func (s *sampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
 	// todo pass req.Header() -> ctx
-	log.Println("in sample")
+	// todo try connect to donwnstream grpc as connect client
 
 	res, err := s.cli.Sample(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{

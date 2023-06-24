@@ -18,5 +18,3 @@ func main() {
 		return nil
 	})
 }
-
-// goal is for this to g
