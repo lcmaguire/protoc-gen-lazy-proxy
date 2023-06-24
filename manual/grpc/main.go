@@ -6,7 +6,6 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample"
@@ -44,14 +43,5 @@ type sampleService struct {
 }
 
 func (s *sampleService) Sample(ctx context.Context, req *sample.SampleRequest) (*sample.SampleResponse, error) {
-	log.Println("in sample")
-
-	md, found := metadata.FromIncomingContext(ctx)
-	log.Println("found ? ", found)
-
-	for _, v := range md.Get("Content-Type") {
-		log.Println(v)
-	}
-
 	return &sample.SampleResponse{Name: req.Name + " is what you sent"}, nil
 }

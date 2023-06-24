@@ -74,8 +74,7 @@ type sampleService struct {
 
 func (s *sampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
 	// todo pass req.Header() -> ctx
-	// todo try connect to donwnstream grpc as connect client
-
+	// for headers desired, get -> write to outgoing metadata
 	res, err := s.cli.Sample(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{
 		Msg: res,

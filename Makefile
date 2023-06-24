@@ -7,7 +7,7 @@ run-grpc-server:
 grpc-curl: # grpc curl for connect service
 	grpcurl \
     -import-path ./sample -proto sample.proto -plaintext \
-	-H "Authorization: Bearer tuki" \
+	-H 'Authorization:Bearer tuki' \
     -d '{"name" : "tuki"}' \
     localhost:8080 tutorial.SampleService/Sample
 	
