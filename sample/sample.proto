@@ -1,0 +1,17 @@
+syntax = "proto3";
+// package tutorial; // todo rename and re gen to be different package
+
+option go_package = "github.com/lcmaguire/protoc-gen-lazy-proxy/sample";
+
+// todo make AIP approved
+service SampleService {
+    rpc Sample(SampleRequest) returns (SampleResponse);
+}
+
+message SampleRequest {
+    string name = 1;
+}
+
+message SampleResponse {
+    string name = 1;
+}
