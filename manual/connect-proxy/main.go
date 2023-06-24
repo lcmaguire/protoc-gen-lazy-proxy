@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
+	grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample"
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample/sampleconnect"
 	"golang.org/x/net/http2"
@@ -18,6 +19,13 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
+
+	reflector := grpcreflect.NewStaticReflector(
+		"sample.SampleService",
+	)
+
+	mux.Handle(grpcreflect.NewHandlerV1(reflector))
+	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 
 	sampleCliConn, err := grpcDial("localhost:8081", false)
 	if err != nil {
@@ -66,6 +74,7 @@ type sampleService struct {
 
 func (s *sampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
 	// todo pass req.Header() -> ctx
+	log.Println("in sample")
 
 	res, err := s.cli.Sample(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{
