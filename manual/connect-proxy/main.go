@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/sampleconnect"
 
@@ -74,9 +75,15 @@ type SampleService struct {
 }
 
 func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
-	// todo pass req.Header() -> ctx
+	ctx = headerToContext(ctx, req.Header())
 	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{
 		Msg: res,
 	}, err
+}
+
+func headerToContext(ctx context.Context, headers http.Header) context.Context {
+	md := metadata.MD(headers)
+	ctx = metadata.NewIncomingContext(ctx, md)
+	return metadata.NewOutgoingContext(ctx, md)
 }
