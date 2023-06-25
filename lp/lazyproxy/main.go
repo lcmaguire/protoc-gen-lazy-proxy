@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
+	// grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -21,17 +22,13 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
-	/* todo see if reflect can be added in too.
-	reflector := grpcreflect.NewStaticReflector(
-		"sample.SampleService",
-	)
-
-	mux.Handle(grpcreflect.NewHandlerV1(reflector))
-	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
-	*/
-
 	mux.Handle(
 		sampleconnect.NewSampleServiceHandler(newSampleService()),
+		// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
+	)
+
+	mux.Handle(
+		sampleconnect.NewExtraServiceHandler(newExtraService()),
 		// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
 	)
 
@@ -64,21 +61,42 @@ func newSampleService() *SampleService {
 	if err != nil {
 		panic(err)
 	}
-
 	return &SampleService{
-		cli: sample.NewSampleServiceClient(cliConn),
+		SampleServiceClient: sample.NewSampleServiceClient(cliConn),
 	}
 }
 
 type SampleService struct {
 	sampleconnect.UnimplementedSampleServiceHandler
-	cli sample.SampleServiceClient
+	sample.SampleServiceClient
 }
 
 func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
 	// todo pass req.Header() -> ctx
-	// for headers desired, get -> write to outgoing metadata
-	res, err := s.cli.Sample(ctx, req.Msg)
+	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
+	return &connect.Response[sample.SampleResponse]{
+		Msg: res,
+	}, err
+}
+
+func newExtraService() *ExtraService {
+	cliConn, err := grpcDial("localhost:8081", false)
+	if err != nil {
+		panic(err)
+	}
+	return &ExtraService{
+		ExtraServiceClient: sample.NewExtraServiceClient(cliConn),
+	}
+}
+
+type ExtraService struct {
+	sampleconnect.UnimplementedExtraServiceHandler
+	sample.ExtraServiceClient
+}
+
+func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
+	// todo pass req.Header() -> ctx
+	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{
 		Msg: res,
 	}, err

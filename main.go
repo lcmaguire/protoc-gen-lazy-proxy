@@ -26,7 +26,6 @@ func main() {
 func Generate(gen *protogen.Plugin) error {
 
 	serviceInfo := make([]pkg.LazyProxyServiceInfo, 0)
-	methodInformation := make([]pkg.LazyProxyMethodInfo, 0)
 	imports := map[string]string{}
 	gf := gen.NewGeneratedFile("lazyproxy/main.go", protogen.GoImportPath("."))
 	gf.P("package main")
@@ -46,8 +45,8 @@ func Generate(gen *protogen.Plugin) error {
 				ServiceName: serviceName,
 				Pkg:         pkgName,
 			}
-			serviceInfo = append(serviceInfo, sInfo)
 
+			methodInformation := make([]pkg.LazyProxyMethodInfo, 0)
 			for _, method := range service.Methods {
 				// todo have this condition not add info.
 				if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
@@ -67,7 +66,10 @@ func Generate(gen *protogen.Plugin) error {
 
 				methodInformation = append(methodInformation, mInfo)
 			}
+			sInfo.Methods = methodInformation
+			serviceInfo = append(serviceInfo, sInfo)
 		}
+
 	}
 
 	// todo have imports be sorted
@@ -78,11 +80,6 @@ func Generate(gen *protogen.Plugin) error {
 	sort.SliceStable(importArr, func(i, j int) bool {
 		return importArr[i] > importArr[j]
 	})
-
-	// todo move to array to import all.
-	//gf.P(`import "github.com/bufbuild/connect-go"`)
-	//gf.P(`import "google.golang.org/grpc"`)
-	//gf.P(`import "context"`)
 
 	serverInfo := pkg.LazyProxyServerInfo{
 		Services: serviceInfo,
@@ -97,10 +94,11 @@ func Generate(gen *protogen.Plugin) error {
 		gf.P(str)
 	}
 
-	for _, method := range methodInformation {
-		str := ExecuteTemplate(pkg.LazyProxyMethod, method)
-		gf.P(str)
-	}
+	/*
+		for _, method := range methodInformation {
+			str := ExecuteTemplate(pkg.LazyProxyMethod, method)
+			gf.P(str)
+		}*/
 
 	return nil
 }

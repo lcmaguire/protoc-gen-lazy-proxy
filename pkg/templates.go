@@ -11,45 +11,32 @@ func new{{.ServiceName}}() *{{.ServiceName}} {
 		panic(err)
 	}
 	return &{{.ServiceName}}{
-		cli: {{.Pkg}}.New{{.ServiceName}}Client(cliConn),
+		{{.ServiceName}}Client: {{.Pkg}}.New{{.ServiceName}}Client(cliConn),
 	}
 }
 
 type {{.ServiceName}} struct {
 	{{.Pkg}}connect.Unimplemented{{.ServiceName}}Handler
-	cli {{.Pkg}}.{{.ServiceName}}Client
-}
-`
-
-/*
-	read config
-		ServiceName
-		URL
-		bool
-
-	INIT {}
-
-	struct {
-		.... all services
-	}
-*/
-
-type LazyProxyServiceInfo struct {
-	ServiceName string
-	Pkg         string
+	{{.Pkg}}.{{.ServiceName}}Client
 }
 
-const LazyProxyMethod = `
+{{range  .Methods}}
 func (s *{{.ServiceName}}) {{.MethodName}}(ctx context.Context, req *connect.Request[{{.RequestName}}]) (*connect.Response[{{.ResponseName}}], error) {
 	// todo pass req.Header() -> ctx
-	// for headers desired, get -> write to outgoing metadata
-	res, err := s.cli.Sample(ctx, req.Msg)
+	res, err := s.{{.ServiceName}}Client.{{.MethodName}}(ctx, req.Msg)
 	return &connect.Response[{{.ResponseName}}]{
 		Msg: res,
 	}, err
 }
+{{end}}
 
 `
+
+type LazyProxyServiceInfo struct {
+	ServiceName string
+	Pkg         string
+	Methods     []LazyProxyMethodInfo
+}
 
 type LazyProxyMethodInfo struct {
 	ServiceName  string
@@ -72,7 +59,7 @@ import (
 	"net/http"
 
 	"github.com/bufbuild/connect-go"
-	grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
+	// grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"

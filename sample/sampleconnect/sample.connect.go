@@ -23,6 +23,8 @@ const _ = connect_go.IsAtLeastVersion0_1_0
 const (
 	// SampleServiceName is the fully-qualified name of the SampleService service.
 	SampleServiceName = "tutorial.SampleService"
+	// ExtraServiceName is the fully-qualified name of the ExtraService service.
+	ExtraServiceName = "tutorial.ExtraService"
 )
 
 // SampleServiceClient is a client for the tutorial.SampleService service.
@@ -83,4 +85,64 @@ type UnimplementedSampleServiceHandler struct{}
 
 func (UnimplementedSampleServiceHandler) Sample(context.Context, *connect_go.Request[sample.SampleRequest]) (*connect_go.Response[sample.SampleResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("tutorial.SampleService.Sample is not implemented"))
+}
+
+// ExtraServiceClient is a client for the tutorial.ExtraService service.
+type ExtraServiceClient interface {
+	Extra(context.Context, *connect_go.Request[sample.SampleRequest]) (*connect_go.Response[sample.SampleResponse], error)
+}
+
+// NewExtraServiceClient constructs a client for the tutorial.ExtraService service. By default, it
+// uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
+// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
+// connect.WithGRPCWeb() options.
+//
+// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
+// http://api.acme.com or https://acme.com/grpc).
+func NewExtraServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) ExtraServiceClient {
+	baseURL = strings.TrimRight(baseURL, "/")
+	return &extraServiceClient{
+		extra: connect_go.NewClient[sample.SampleRequest, sample.SampleResponse](
+			httpClient,
+			baseURL+"/tutorial.ExtraService/Extra",
+			opts...,
+		),
+	}
+}
+
+// extraServiceClient implements ExtraServiceClient.
+type extraServiceClient struct {
+	extra *connect_go.Client[sample.SampleRequest, sample.SampleResponse]
+}
+
+// Extra calls tutorial.ExtraService.Extra.
+func (c *extraServiceClient) Extra(ctx context.Context, req *connect_go.Request[sample.SampleRequest]) (*connect_go.Response[sample.SampleResponse], error) {
+	return c.extra.CallUnary(ctx, req)
+}
+
+// ExtraServiceHandler is an implementation of the tutorial.ExtraService service.
+type ExtraServiceHandler interface {
+	Extra(context.Context, *connect_go.Request[sample.SampleRequest]) (*connect_go.Response[sample.SampleResponse], error)
+}
+
+// NewExtraServiceHandler builds an HTTP handler from the service implementation. It returns the
+// path on which to mount the handler and the handler itself.
+//
+// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
+// and JSON codecs. They also support gzip compression.
+func NewExtraServiceHandler(svc ExtraServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
+	mux := http.NewServeMux()
+	mux.Handle("/tutorial.ExtraService/Extra", connect_go.NewUnaryHandler(
+		"/tutorial.ExtraService/Extra",
+		svc.Extra,
+		opts...,
+	))
+	return "/tutorial.ExtraService/", mux
+}
+
+// UnimplementedExtraServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedExtraServiceHandler struct{}
+
+func (UnimplementedExtraServiceHandler) Extra(context.Context, *connect_go.Request[sample.SampleRequest]) (*connect_go.Response[sample.SampleResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("tutorial.ExtraService.Extra is not implemented"))
 }
