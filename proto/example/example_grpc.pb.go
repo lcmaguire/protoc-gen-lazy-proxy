@@ -18,86 +18,86 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ExtraServiceClient is the client API for ExtraService service.
+// ExampleServiceClient is the client API for ExampleService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ExtraServiceClient interface {
-	Extra(ctx context.Context, in *ExtraRequest, opts ...grpc.CallOption) (*ExtraResponse, error)
+type ExampleServiceClient interface {
+	Example(ctx context.Context, in *ExampleRequest, opts ...grpc.CallOption) (*ExampleResponse, error)
 }
 
-type extraServiceClient struct {
+type exampleServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewExtraServiceClient(cc grpc.ClientConnInterface) ExtraServiceClient {
-	return &extraServiceClient{cc}
+func NewExampleServiceClient(cc grpc.ClientConnInterface) ExampleServiceClient {
+	return &exampleServiceClient{cc}
 }
 
-func (c *extraServiceClient) Extra(ctx context.Context, in *ExtraRequest, opts ...grpc.CallOption) (*ExtraResponse, error) {
-	out := new(ExtraResponse)
-	err := c.cc.Invoke(ctx, "/example.ExtraService/Extra", in, out, opts...)
+func (c *exampleServiceClient) Example(ctx context.Context, in *ExampleRequest, opts ...grpc.CallOption) (*ExampleResponse, error) {
+	out := new(ExampleResponse)
+	err := c.cc.Invoke(ctx, "/example.ExampleService/Example", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ExtraServiceServer is the server API for ExtraService service.
-// All implementations must embed UnimplementedExtraServiceServer
+// ExampleServiceServer is the server API for ExampleService service.
+// All implementations must embed UnimplementedExampleServiceServer
 // for forward compatibility
-type ExtraServiceServer interface {
-	Extra(context.Context, *ExtraRequest) (*ExtraResponse, error)
-	mustEmbedUnimplementedExtraServiceServer()
+type ExampleServiceServer interface {
+	Example(context.Context, *ExampleRequest) (*ExampleResponse, error)
+	mustEmbedUnimplementedExampleServiceServer()
 }
 
-// UnimplementedExtraServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedExtraServiceServer struct {
+// UnimplementedExampleServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedExampleServiceServer struct {
 }
 
-func (UnimplementedExtraServiceServer) Extra(context.Context, *ExtraRequest) (*ExtraResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Extra not implemented")
+func (UnimplementedExampleServiceServer) Example(context.Context, *ExampleRequest) (*ExampleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Example not implemented")
 }
-func (UnimplementedExtraServiceServer) mustEmbedUnimplementedExtraServiceServer() {}
+func (UnimplementedExampleServiceServer) mustEmbedUnimplementedExampleServiceServer() {}
 
-// UnsafeExtraServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ExtraServiceServer will
+// UnsafeExampleServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ExampleServiceServer will
 // result in compilation errors.
-type UnsafeExtraServiceServer interface {
-	mustEmbedUnimplementedExtraServiceServer()
+type UnsafeExampleServiceServer interface {
+	mustEmbedUnimplementedExampleServiceServer()
 }
 
-func RegisterExtraServiceServer(s grpc.ServiceRegistrar, srv ExtraServiceServer) {
-	s.RegisterService(&ExtraService_ServiceDesc, srv)
+func RegisterExampleServiceServer(s grpc.ServiceRegistrar, srv ExampleServiceServer) {
+	s.RegisterService(&ExampleService_ServiceDesc, srv)
 }
 
-func _ExtraService_Extra_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExtraRequest)
+func _ExampleService_Example_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ExtraServiceServer).Extra(ctx, in)
+		return srv.(ExampleServiceServer).Example(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/example.ExtraService/Extra",
+		FullMethod: "/example.ExampleService/Example",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExtraServiceServer).Extra(ctx, req.(*ExtraRequest))
+		return srv.(ExampleServiceServer).Example(ctx, req.(*ExampleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// ExtraService_ServiceDesc is the grpc.ServiceDesc for ExtraService service.
+// ExampleService_ServiceDesc is the grpc.ServiceDesc for ExampleService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var ExtraService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "example.ExtraService",
-	HandlerType: (*ExtraServiceServer)(nil),
+var ExampleService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "example.ExampleService",
+	HandlerType: (*ExampleServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Extra",
-			Handler:    _ExtraService_Extra_Handler,
+			MethodName: "Example",
+			Handler:    _ExampleService_Example_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

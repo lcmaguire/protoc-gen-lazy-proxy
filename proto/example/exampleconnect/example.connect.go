@@ -21,66 +21,66 @@ import (
 const _ = connect_go.IsAtLeastVersion0_1_0
 
 const (
-	// ExtraServiceName is the fully-qualified name of the ExtraService service.
-	ExtraServiceName = "example.ExtraService"
+	// ExampleServiceName is the fully-qualified name of the ExampleService service.
+	ExampleServiceName = "example.ExampleService"
 )
 
-// ExtraServiceClient is a client for the example.ExtraService service.
-type ExtraServiceClient interface {
-	Extra(context.Context, *connect_go.Request[example.ExtraRequest]) (*connect_go.Response[example.ExtraResponse], error)
+// ExampleServiceClient is a client for the example.ExampleService service.
+type ExampleServiceClient interface {
+	Example(context.Context, *connect_go.Request[example.ExampleRequest]) (*connect_go.Response[example.ExampleResponse], error)
 }
 
-// NewExtraServiceClient constructs a client for the example.ExtraService service. By default, it
-// uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
-// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
-// connect.WithGRPCWeb() options.
+// NewExampleServiceClient constructs a client for the example.ExampleService service. By default,
+// it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and
+// sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC()
+// or connect.WithGRPCWeb() options.
 //
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
-func NewExtraServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) ExtraServiceClient {
+func NewExampleServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) ExampleServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	return &extraServiceClient{
-		extra: connect_go.NewClient[example.ExtraRequest, example.ExtraResponse](
+	return &exampleServiceClient{
+		example: connect_go.NewClient[example.ExampleRequest, example.ExampleResponse](
 			httpClient,
-			baseURL+"/example.ExtraService/Extra",
+			baseURL+"/example.ExampleService/Example",
 			opts...,
 		),
 	}
 }
 
-// extraServiceClient implements ExtraServiceClient.
-type extraServiceClient struct {
-	extra *connect_go.Client[example.ExtraRequest, example.ExtraResponse]
+// exampleServiceClient implements ExampleServiceClient.
+type exampleServiceClient struct {
+	example *connect_go.Client[example.ExampleRequest, example.ExampleResponse]
 }
 
-// Extra calls example.ExtraService.Extra.
-func (c *extraServiceClient) Extra(ctx context.Context, req *connect_go.Request[example.ExtraRequest]) (*connect_go.Response[example.ExtraResponse], error) {
-	return c.extra.CallUnary(ctx, req)
+// Example calls example.ExampleService.Example.
+func (c *exampleServiceClient) Example(ctx context.Context, req *connect_go.Request[example.ExampleRequest]) (*connect_go.Response[example.ExampleResponse], error) {
+	return c.example.CallUnary(ctx, req)
 }
 
-// ExtraServiceHandler is an implementation of the example.ExtraService service.
-type ExtraServiceHandler interface {
-	Extra(context.Context, *connect_go.Request[example.ExtraRequest]) (*connect_go.Response[example.ExtraResponse], error)
+// ExampleServiceHandler is an implementation of the example.ExampleService service.
+type ExampleServiceHandler interface {
+	Example(context.Context, *connect_go.Request[example.ExampleRequest]) (*connect_go.Response[example.ExampleResponse], error)
 }
 
-// NewExtraServiceHandler builds an HTTP handler from the service implementation. It returns the
+// NewExampleServiceHandler builds an HTTP handler from the service implementation. It returns the
 // path on which to mount the handler and the handler itself.
 //
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
-func NewExtraServiceHandler(svc ExtraServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
+func NewExampleServiceHandler(svc ExampleServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
 	mux := http.NewServeMux()
-	mux.Handle("/example.ExtraService/Extra", connect_go.NewUnaryHandler(
-		"/example.ExtraService/Extra",
-		svc.Extra,
+	mux.Handle("/example.ExampleService/Example", connect_go.NewUnaryHandler(
+		"/example.ExampleService/Example",
+		svc.Example,
 		opts...,
 	))
-	return "/example.ExtraService/", mux
+	return "/example.ExampleService/", mux
 }
 
-// UnimplementedExtraServiceHandler returns CodeUnimplemented from all methods.
-type UnimplementedExtraServiceHandler struct{}
+// UnimplementedExampleServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedExampleServiceHandler struct{}
 
-func (UnimplementedExtraServiceHandler) Extra(context.Context, *connect_go.Request[example.ExtraRequest]) (*connect_go.Response[example.ExtraResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("example.ExtraService.Extra is not implemented"))
+func (UnimplementedExampleServiceHandler) Example(context.Context, *connect_go.Request[example.ExampleRequest]) (*connect_go.Response[example.ExampleResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("example.ExampleService.Example is not implemented"))
 }

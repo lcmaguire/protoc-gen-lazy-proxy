@@ -3,14 +3,14 @@ package example;
 
 option go_package = "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example";
 
-service ExtraService {
-    rpc Extra(ExtraRequest) returns (ExtraResponse);
+service ExampleService {
+    rpc Example(ExampleRequest) returns (ExampleResponse);
 }
 
-message ExtraRequest {
+message ExampleRequest {
     string name = 1;
 }
 
-message ExtraResponse {
+message ExampleResponse {
     string name = 1;
 }

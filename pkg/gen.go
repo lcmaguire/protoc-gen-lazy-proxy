@@ -2,8 +2,7 @@ package pkg
 
 import (
 	"bytes"
-	"sort"
-	"strings"
+	"path"
 	"text/template"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -12,25 +11,31 @@ import (
 // Generate implements generating the lazyproxy.
 func Generate(gen *protogen.Plugin) error {
 	serviceInfo := make([]LazyProxyServiceInfo, 0)
-	imports := map[string]string{}
+
+	// file.GoPackageName += generatedPackageSuffix
 	// todo for module based proxy consider having the name of this to be set by caller of plugin or pkg name.
 	gf := gen.NewGeneratedFile("lazyproxy/main.go", protogen.GoImportPath("."))
 	gf.P("package main")
 
 	for _, file := range gen.Files {
-		pkgName := getParamPKG(file.GoDescriptorIdent.GoImportPath.String())
-		connectPkgName := "/" + pkgName + "connect"
-		connectImport := protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath + protogen.GoImportPath(connectPkgName)}.GoImportPath.String()
-		protoImport := protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath}.GoImportPath.String()
-
-		imports[connectImport] = connectImport
-		imports[protoImport] = protoImport
-
 		for _, service := range file.Services {
+
+			// import filename based upon what is generated here
+			// https://github.com/bufbuild/connect-go/blob/main/cmd/protoc-gen-connect-go/main.go#L116
+			connectFileName := file.GoPackageName + "connect"
+			importP := protogen.GoImportPath(path.Join(
+				string(file.GoImportPath),
+				string(connectFileName),
+			))
+			connectIdent := gf.QualifiedGoIdent(protogen.GoIdent{"", importP})
+
+			protoIdent := gf.QualifiedGoIdent(protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath})
+
 			serviceName := string(service.Desc.Name())
 			sInfo := LazyProxyServiceInfo{
 				ServiceName: serviceName,
-				Pkg:         pkgName,
+				Pkg:         protoIdent,
+				ConnectPkg:  connectIdent,
 			}
 
 			methodInformation := make([]LazyProxyMethodInfo, 0)
@@ -40,15 +45,14 @@ func Generate(gen *protogen.Plugin) error {
 					break
 				}
 
-				// Note need to import req / res if it is different
-				requestType := getParamPKG(method.Input.GoIdent.GoImportPath.String()) + "." + string(method.Input.Desc.Name())
-				responseType := getParamPKG(method.Output.GoIdent.GoImportPath.String()) + "." + string(method.Output.Desc.Name())
+				reqIdent := gf.QualifiedGoIdent(method.Input.GoIdent)
+				resIdent := gf.QualifiedGoIdent(method.Output.GoIdent)
 
 				mInfo := LazyProxyMethodInfo{
 					ServiceName:  serviceName,
 					MethodName:   string(method.Desc.Name()),
-					RequestName:  string(requestType),
-					ResponseName: string(responseType),
+					RequestName:  string(reqIdent),
+					ResponseName: string(resIdent),
 				}
 
 				methodInformation = append(methodInformation, mInfo)
@@ -58,18 +62,8 @@ func Generate(gen *protogen.Plugin) error {
 		}
 	}
 
-	// todo have imports be sorted
-	importArr := make([]string, 0, len(imports))
-	for _, v := range imports {
-		importArr = append(importArr, v)
-	}
-	sort.SliceStable(importArr, func(i, j int) bool {
-		return importArr[i] > importArr[j]
-	})
-
 	serverInfo := LazyProxyServerInfo{
 		Services: serviceInfo,
-		Imports:  importArr,
 	}
 
 	str := ExecuteTemplate(LazyProxyServer, serverInfo)
@@ -96,9 +90,4 @@ func ExecuteTemplate(tplate string, data any) string {
 		panic(err)
 	}
 	return buffy.String()
-}
-
-func getParamPKG(in string) string {
-	arr := strings.Split(in, "/")
-	return strings.Trim(arr[len(arr)-1], `"`)
 }

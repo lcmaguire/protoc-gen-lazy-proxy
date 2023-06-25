@@ -1,6 +1,15 @@
 package main
 
 import (
+	example "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example"
+	exampleconnect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example/exampleconnect"
+	v1 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1"
+	extrav1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1/extrav1connect"
+	v11 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
+	v1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1/v1connect"
+)
+
+import (
 	"context"
 	"crypto/x509"
 	"log"
@@ -16,14 +25,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/sampleconnect"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example/exampleconnect"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example"
 )
 
 func main() {
@@ -33,9 +34,11 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle(exampleconnect.NewExtraServiceHandler(newExtraService()))
+	mux.Handle(exampleconnect.NewExampleServiceHandler(newExampleService()))
 
-	mux.Handle(sampleconnect.NewSampleServiceHandler(newSampleService()))
+	mux.Handle(extrav1connect.NewExtraServiceHandler(newExtraService()))
+
+	mux.Handle(v1connect.NewSampleServiceHandler(newSampleService()))
 
 	err := http.ListenAndServe(
 		"localhost:8080", // todo have this be set by an env var
@@ -66,6 +69,30 @@ func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
 }
 
+func newExampleService() *ExampleService {
+	targetURL := os.Getenv("ExampleService")
+	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
+	if err != nil {
+		panic(err)
+	}
+	return &ExampleService{
+		ExampleServiceClient: example.NewExampleServiceClient(cliConn),
+	}
+}
+
+type ExampleService struct {
+	exampleconnect.UnimplementedExampleServiceHandler
+	example.ExampleServiceClient
+}
+
+func (s *ExampleService) Example(ctx context.Context, req *connect.Request[example.ExampleRequest]) (*connect.Response[example.ExampleResponse], error) {
+	ctx = headerToContext(ctx, req.Header())
+	res, err := s.ExampleServiceClient.Example(ctx, req.Msg)
+	return &connect.Response[example.ExampleResponse]{
+		Msg: res,
+	}, err
+}
+
 func newExtraService() *ExtraService {
 	targetURL := os.Getenv("ExtraService")
 	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
@@ -73,19 +100,19 @@ func newExtraService() *ExtraService {
 		panic(err)
 	}
 	return &ExtraService{
-		ExtraServiceClient: example.NewExtraServiceClient(cliConn),
+		ExtraServiceClient: v1.NewExtraServiceClient(cliConn),
 	}
 }
 
 type ExtraService struct {
-	exampleconnect.UnimplementedExtraServiceHandler
-	example.ExtraServiceClient
+	extrav1connect.UnimplementedExtraServiceHandler
+	v1.ExtraServiceClient
 }
 
-func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[example.ExtraRequest]) (*connect.Response[example.ExtraResponse], error) {
+func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[v1.ExtraRequest]) (*connect.Response[v1.ExtraResponse], error) {
 	ctx = headerToContext(ctx, req.Header())
 	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
-	return &connect.Response[example.ExtraResponse]{
+	return &connect.Response[v1.ExtraResponse]{
 		Msg: res,
 	}, err
 }
@@ -97,19 +124,19 @@ func newSampleService() *SampleService {
 		panic(err)
 	}
 	return &SampleService{
-		SampleServiceClient: sample.NewSampleServiceClient(cliConn),
+		SampleServiceClient: v11.NewSampleServiceClient(cliConn),
 	}
 }
 
 type SampleService struct {
-	sampleconnect.UnimplementedSampleServiceHandler
-	sample.SampleServiceClient
+	v1connect.UnimplementedSampleServiceHandler
+	v11.SampleServiceClient
 }
 
-func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
+func (s *SampleService) Sample(ctx context.Context, req *connect.Request[v11.SampleRequest]) (*connect.Response[v11.SampleResponse], error) {
 	ctx = headerToContext(ctx, req.Header())
 	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
-	return &connect.Response[sample.SampleResponse]{
+	return &connect.Response[v11.SampleResponse]{
 		Msg: res,
 	}, err
 }
