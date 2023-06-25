@@ -63,6 +63,7 @@ import (
 	"os"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/joho/godotenv"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -76,12 +77,13 @@ import (
 )
 
 func main() {
-	mux := http.NewServeMux()
+	if err := godotenv.Load(); err != nil {
+		panic(err)
+	}
 
+	mux := http.NewServeMux()
 	{{range  .Services}}
-		mux.Handle(
-			{{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}()),
-		)
+		mux.Handle({{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}()))
 	{{end}}
 
 	err := http.ListenAndServe(

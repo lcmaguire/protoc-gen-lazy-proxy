@@ -5,10 +5,11 @@ import (
 	"crypto/x509"
 	"log"
 	"net/http"
-	"strings"
 	"os"
+	"strings"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/joho/godotenv"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -26,8 +27,11 @@ import (
 )
 
 func main() {
-	mux := http.NewServeMux()
+	if err := godotenv.Load(); err != nil {
+		panic(err)
+	}
 
+	mux := http.NewServeMux()
 	mux.Handle(
 		exampleconnect.NewExtraServiceHandler(newExtraService()),
 	)

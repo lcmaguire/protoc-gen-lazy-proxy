@@ -18,7 +18,7 @@ func main() {
 }
 
 func run() error {
-	listenOn := "127.0.0.1:8081" // this should be passed in via config
+	listenOn := "127.0.0.1:8082" // this should be passed in via config
 	listener, err := net.Listen("tcp", listenOn)
 	if err != nil {
 		return err
