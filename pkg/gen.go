@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"path"
-	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -27,31 +26,12 @@ func Generate(gen *protogen.Plugin) error {
 		for _, service := range file.Services {
 
 			connectFileName := file.GoPackageName + "connect"
-			gf.P("// connectFileName ? ident " + connectFileName)
-
-			generatedFilenamePrefixToSlash := filepath.ToSlash(file.GeneratedFilenamePrefix)
-			gf.P("// generatedFilenamePrefixToSlash ? ident " + generatedFilenamePrefixToSlash)
-			prefix := path.Join(
-				path.Dir(generatedFilenamePrefixToSlash),
-				string(connectFileName),
-				//path.Base(generatedFilenamePrefixToSlash),
-			)
 			importP := protogen.GoImportPath(path.Join(
 				string(file.GoImportPath),
 				string(connectFileName),
 			))
 			connectIdent := gf.QualifiedGoIdent(protogen.GoIdent{"", importP})
-
-			gf.P("// connectPath ? ident " + prefix)
-			///gf.P("// connectPathVal ? ident " + connectCopyVal)
-
-			//pkgName := getParamPKG(file.GoDescriptorIdent.GoImportPath.String())
-			//connectPkgName := "/" + pkgName + "connect"
 			protoIdent := gf.QualifiedGoIdent(protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath})
-			gf.P("// proto ident " + protoIdent)
-
-			//connectIdent := gf.QualifiedGoIdent(protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath + protogen.GoImportPath(connectPkgName)})
-			//gf.P("// connectImport ident " + connectIdent)
 
 			serviceName := string(service.Desc.Name())
 			sInfo := LazyProxyServiceInfo{
