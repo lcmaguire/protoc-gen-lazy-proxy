@@ -19,18 +19,17 @@ func Generate(gen *protogen.Plugin) error {
 	gf.P("package main")
 
 	for _, file := range gen.Files {
-		// import filename based upon what is generated here
-		// https://github.com/bufbuild/connect-go/blob/main/cmd/protoc-gen-connect-go/main.go#L116
-		//
-
 		for _, service := range file.Services {
 
+			// import filename based upon what is generated here
+			// https://github.com/bufbuild/connect-go/blob/main/cmd/protoc-gen-connect-go/main.go#L116
 			connectFileName := file.GoPackageName + "connect"
 			importP := protogen.GoImportPath(path.Join(
 				string(file.GoImportPath),
 				string(connectFileName),
 			))
 			connectIdent := gf.QualifiedGoIdent(protogen.GoIdent{"", importP})
+
 			protoIdent := gf.QualifiedGoIdent(protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath})
 
 			serviceName := string(service.Desc.Name())
