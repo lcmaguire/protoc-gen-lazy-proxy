@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"html/template"
+	"strings"
 
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/pkg"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -17,8 +18,7 @@ func main() {
 	}.Run(func(gen *protogen.Plugin) error {
 		// this enables optional fields to be supported.
 		gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
-
-		return nil
+		return Generate(gen)
 	})
 }
 
@@ -26,26 +26,34 @@ func Generate(gen *protogen.Plugin) error {
 
 	serviceInfo := make([]pkg.LazyProxyServiceInfo, 0)
 	methodInformation := make([]pkg.LazyProxyMethodInfo, 0)
+	gf := gen.NewGeneratedFile("lazyproxy/main.go", protogen.GoImportPath("."))
+	gf.P("package main")
 
 	for _, file := range gen.Files {
+		pkgName := getParamPKG(file.GoDescriptorIdent.GoImportPath.String())
+		connectPkgName := "/" + pkgName + "connect"
+		connectImport := protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath + protogen.GoImportPath(connectPkgName)}.GoImportPath.String()
+		protoImport := protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath}.GoImportPath.String()
+		gf.P("import " + connectImport)
+		gf.P("import " + protoImport)
+
 		for _, service := range file.Services {
 			serviceName := string(service.Desc.Name())
-
 			sInfo := pkg.LazyProxyServiceInfo{
 				ServiceName: serviceName,
-				Pkg:         service.GoName,
+				Pkg:         pkgName,
 			}
 			serviceInfo = append(serviceInfo, sInfo)
 
 			for _, method := range service.Methods {
 				// todo check if streaming and skip.
+				if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
+					break
+				}
 
-				//requestType := //getParamPKG(v.Input.GoIdent.GoImportPath.String()) + "." + v.Input.GoIdent.GoName
-				//responseType := getParamPKG(v.Output.GoIdent.GoImportPath.String()) + "." + v.Output.GoIdent.GoName
-
-				// get import path + pkg,
-				requestType := method.Input.Desc.Name()
-				responseType := method.Output.Desc.Name()
+				// Note need to import req / res if it is different
+				requestType := getParamPKG(method.Input.GoIdent.GoImportPath.String()) + "." + string(method.Input.Desc.Name())
+				responseType := getParamPKG(method.Output.GoIdent.GoImportPath.String()) + "." + string(method.Output.Desc.Name())
 
 				mInfo := pkg.LazyProxyMethodInfo{
 					ServiceName:  serviceName,
@@ -59,8 +67,9 @@ func Generate(gen *protogen.Plugin) error {
 		}
 	}
 
-	gf := gen.NewGeneratedFile("lazyproxy/main.go", protogen.GoImportPath("."))
-	gf.P("package main")
+	gf.P(`import "github.com/bufbuild/connect-go"`)
+	gf.P(`import "google.golang.org/grpc"`)
+	gf.P(`import "context"`)
 
 	for _, service := range serviceInfo {
 		str := ExecuteTemplate(pkg.LazyProxyService, service)
@@ -68,7 +77,7 @@ func Generate(gen *protogen.Plugin) error {
 	}
 
 	for _, method := range methodInformation {
-		str := ExecuteTemplate(pkg.LazyProxyService, method)
+		str := ExecuteTemplate(pkg.LazyProxyMethod, method)
 		gf.P(str)
 	}
 
@@ -88,4 +97,9 @@ func ExecuteTemplate(tplate string, data any) string {
 		panic(err)
 	}
 	return buffy.String()
+}
+
+func getParamPKG(in string) string {
+	arr := strings.Split(in, "/")
+	return strings.Trim(arr[len(arr)-1], `"`)
 }
