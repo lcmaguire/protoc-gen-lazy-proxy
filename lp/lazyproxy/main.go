@@ -5,8 +5,8 @@ import (
 	"crypto/x509"
 	"log"
 	"net/http"
-	"os"
 	"strings"
+	"os"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/joho/godotenv"
@@ -32,13 +32,10 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle(
-		exampleconnect.NewExtraServiceHandler(newExtraService()),
-	)
 
-	mux.Handle(
-		sampleconnect.NewSampleServiceHandler(newSampleService()),
-	)
+	mux.Handle(exampleconnect.NewExtraServiceHandler(newExtraService()))
+
+	mux.Handle(sampleconnect.NewSampleServiceHandler(newSampleService()))
 
 	err := http.ListenAndServe(
 		"localhost:8080", // todo have this be set by an env var
