@@ -1,0 +1,16 @@
+syntax = "proto3";
+package extra.v1; 
+
+option go_package = "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1;extrav1";
+
+service ExtraService {
+    rpc Extra(ExtraRequest) returns (ExtraResponse);
+}
+
+message ExtraRequest {
+    string name = 1;
+}
+
+message ExtraResponse {
+    string name = 1;
+}
