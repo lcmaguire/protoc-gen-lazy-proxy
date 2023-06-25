@@ -18,10 +18,18 @@ import (
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/sampleconnect"
 
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample"
+
+	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example/exampleconnect"
+
+	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example"
 )
 
 func main() {
 	mux := http.NewServeMux()
+
+	mux.Handle(
+		exampleconnect.NewExtraServiceHandler(newExtraService()),
+	)
 
 	mux.Handle(
 		sampleconnect.NewSampleServiceHandler(newSampleService()),
@@ -49,6 +57,30 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 	}
 
 	return grpc.Dial(targetURL, grpc.WithTransportCredentials(creds))
+}
+
+func newExtraService() *ExtraService {
+	targetURL := os.Getenv("ExtraService")
+	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
+	if err != nil {
+		panic(err)
+	}
+	return &ExtraService{
+		ExtraServiceClient: example.NewExtraServiceClient(cliConn),
+	}
+}
+
+type ExtraService struct {
+	exampleconnect.UnimplementedExtraServiceHandler
+	example.ExtraServiceClient
+}
+
+func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[example.ExtraRequest]) (*connect.Response[example.ExtraResponse], error) {
+	// todo pass req.Header() -> ctx
+	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
+	return &connect.Response[example.ExtraResponse]{
+		Msg: res,
+	}, err
 }
 
 func newSampleService() *SampleService {

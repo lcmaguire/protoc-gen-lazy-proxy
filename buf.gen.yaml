@@ -12,3 +12,4 @@ plugins:
   - name: lazy-proxy
     out: lp
     opt: paths=source_relative
+    strategy: all
