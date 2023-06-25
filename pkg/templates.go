@@ -6,7 +6,8 @@ package pkg
 
 const LazyProxyService = `
 func new{{.ServiceName}}() *{{.ServiceName}} {
-	cliConn, err := grpcDial("localhost:8081", false)
+	targetURL := os.Getenv("{{.ServiceName}}")
+	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +82,7 @@ func main() {
 	{{end}}
 
 	err := http.ListenAndServe(
-		"localhost:8080",
+		"localhost:8080", // todo have this be set by an env var
 		// For gRPC clients, it's convenient to support HTTP/2 without TLS. You can
 		// avoid x/net/http2 by using http.ListenAndServeTLS.
 		h2c.NewHandler(mux, &http2.Server{}),
