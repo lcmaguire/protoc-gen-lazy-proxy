@@ -8,6 +8,10 @@ service SampleService {
     rpc Sample(SampleRequest) returns (SampleResponse);
 }
 
+service ExtraService {
+    rpc Extra(SampleRequest) returns (SampleResponse);
+}
+
 message SampleRequest {
     string name = 1;
 }
