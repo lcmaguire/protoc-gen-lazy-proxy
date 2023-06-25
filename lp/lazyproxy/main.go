@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/sampleconnect"
 
@@ -59,9 +60,13 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 	return grpc.Dial(targetURL, grpc.WithTransportCredentials(creds))
 }
 
+func headerToContext(ctx context.Context, headers http.Header) context.Context {
+	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
+}
+
 func newExtraService() *ExtraService {
 	targetURL := os.Getenv("ExtraService")
-	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
+	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +81,7 @@ type ExtraService struct {
 }
 
 func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[example.ExtraRequest]) (*connect.Response[example.ExtraResponse], error) {
-	// todo pass req.Header() -> ctx
+	ctx = headerToContext(ctx, req.Header())
 	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
 	return &connect.Response[example.ExtraResponse]{
 		Msg: res,
@@ -85,7 +90,7 @@ func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[example.E
 
 func newSampleService() *SampleService {
 	targetURL := os.Getenv("SampleService")
-	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
+	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +105,7 @@ type SampleService struct {
 }
 
 func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
-	// todo pass req.Header() -> ctx
+	ctx = headerToContext(ctx, req.Header())
 	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{
 		Msg: res,

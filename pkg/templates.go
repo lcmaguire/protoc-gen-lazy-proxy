@@ -7,7 +7,7 @@ package pkg
 const LazyProxyService = `
 func new{{.ServiceName}}() *{{.ServiceName}} {
 	targetURL := os.Getenv("{{.ServiceName}}")
-	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
+	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +23,7 @@ type {{.ServiceName}} struct {
 
 {{range  .Methods}}
 func (s *{{.ServiceName}}) {{.MethodName}}(ctx context.Context, req *connect.Request[{{.RequestName}}]) (*connect.Response[{{.ResponseName}}], error) {
-	// todo pass req.Header() -> ctx
+	ctx = headerToContext(ctx, req.Header())
 	res, err := s.{{.ServiceName}}Client.{{.MethodName}}(ctx, req.Msg)
 	return &connect.Response[{{.ResponseName}}]{
 		Msg: res,
@@ -67,6 +67,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	{{range  .Imports}}
 	{{.}}
@@ -104,5 +105,9 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 	}
 
 	return grpc.Dial(targetURL, grpc.WithTransportCredentials(creds))
+}
+
+func headerToContext(ctx context.Context, headers http.Header) context.Context {
+	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
 }
 `

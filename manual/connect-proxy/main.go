@@ -60,7 +60,7 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 
 func newSampleService() *SampleService {
 	targetURL := os.Getenv("SampleService")
-	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost"))
+	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,5 @@ func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.
 }
 
 func headerToContext(ctx context.Context, headers http.Header) context.Context {
-	md := metadata.MD(headers)
-	ctx = metadata.NewIncomingContext(ctx, md)
-	return metadata.NewOutgoingContext(ctx, md)
+	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
 }
