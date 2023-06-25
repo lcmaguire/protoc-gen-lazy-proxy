@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample"
+	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample"
 )
 
 func main() {

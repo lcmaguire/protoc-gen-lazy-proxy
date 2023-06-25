@@ -1,13 +1,13 @@
 version: v1
 plugins:
   - name: go
-    out: sample
+    out: proto
     opt: paths=source_relative
   - name: go-grpc
-    out: sample
+    out: proto
     opt: paths=source_relative
   - name: connect-go
-    out: sample
+    out: proto
     opt: paths=source_relative
   - name: lazy-proxy
     out: lp

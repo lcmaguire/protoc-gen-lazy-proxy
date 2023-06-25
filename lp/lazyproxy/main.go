@@ -9,16 +9,15 @@ import (
 	"os"
 
 	"github.com/bufbuild/connect-go"
-	// grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample/sampleconnect"
+	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/sampleconnect"
 
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample"
+	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample"
 )
 
 func main() {
@@ -26,10 +25,6 @@ func main() {
 
 	mux.Handle(
 		sampleconnect.NewSampleServiceHandler(newSampleService()),
-	)
-
-	mux.Handle(
-		sampleconnect.NewExtraServiceHandler(newExtraService()),
 	)
 
 	err := http.ListenAndServe(
@@ -75,30 +70,6 @@ type SampleService struct {
 func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
 	// todo pass req.Header() -> ctx
 	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
-	return &connect.Response[sample.SampleResponse]{
-		Msg: res,
-	}, err
-}
-
-func newExtraService() *ExtraService {
-	targetURL := os.Getenv("ExtraService")
-	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
-	if err != nil {
-		panic(err)
-	}
-	return &ExtraService{
-		ExtraServiceClient: sample.NewExtraServiceClient(cliConn),
-	}
-}
-
-type ExtraService struct {
-	sampleconnect.UnimplementedExtraServiceHandler
-	sample.ExtraServiceClient
-}
-
-func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
-	// todo pass req.Header() -> ctx
-	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{
 		Msg: res,
 	}, err

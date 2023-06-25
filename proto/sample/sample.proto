@@ -1,15 +1,10 @@
 syntax = "proto3";
-package tutorial; 
+package sample; 
 
-option go_package = "github.com/lcmaguire/protoc-gen-lazy-proxy/sample";
+option go_package = "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample";
 
-// todo make AIP approved
 service SampleService {
     rpc Sample(SampleRequest) returns (SampleResponse);
-}
-
-service ExtraService {
-    rpc Extra(SampleRequest) returns (SampleResponse);
 }
 
 message SampleRequest {

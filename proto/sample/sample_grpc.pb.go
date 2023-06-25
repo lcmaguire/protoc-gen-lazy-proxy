@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: sample.proto
+// source: sample/sample.proto
 
 package sample
 
@@ -35,7 +35,7 @@ func NewSampleServiceClient(cc grpc.ClientConnInterface) SampleServiceClient {
 
 func (c *sampleServiceClient) Sample(ctx context.Context, in *SampleRequest, opts ...grpc.CallOption) (*SampleResponse, error) {
 	out := new(SampleResponse)
-	err := c.cc.Invoke(ctx, "/tutorial.SampleService/Sample", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/sample.SampleService/Sample", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _SampleService_Sample_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tutorial.SampleService/Sample",
+		FullMethod: "/sample.SampleService/Sample",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SampleServiceServer).Sample(ctx, req.(*SampleRequest))
@@ -92,7 +92,7 @@ func _SampleService_Sample_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SampleService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "tutorial.SampleService",
+	ServiceName: "sample.SampleService",
 	HandlerType: (*SampleServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -101,91 +101,5 @@ var SampleService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "sample.proto",
-}
-
-// ExtraServiceClient is the client API for ExtraService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ExtraServiceClient interface {
-	Extra(ctx context.Context, in *SampleRequest, opts ...grpc.CallOption) (*SampleResponse, error)
-}
-
-type extraServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewExtraServiceClient(cc grpc.ClientConnInterface) ExtraServiceClient {
-	return &extraServiceClient{cc}
-}
-
-func (c *extraServiceClient) Extra(ctx context.Context, in *SampleRequest, opts ...grpc.CallOption) (*SampleResponse, error) {
-	out := new(SampleResponse)
-	err := c.cc.Invoke(ctx, "/tutorial.ExtraService/Extra", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ExtraServiceServer is the server API for ExtraService service.
-// All implementations must embed UnimplementedExtraServiceServer
-// for forward compatibility
-type ExtraServiceServer interface {
-	Extra(context.Context, *SampleRequest) (*SampleResponse, error)
-	mustEmbedUnimplementedExtraServiceServer()
-}
-
-// UnimplementedExtraServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedExtraServiceServer struct {
-}
-
-func (UnimplementedExtraServiceServer) Extra(context.Context, *SampleRequest) (*SampleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Extra not implemented")
-}
-func (UnimplementedExtraServiceServer) mustEmbedUnimplementedExtraServiceServer() {}
-
-// UnsafeExtraServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ExtraServiceServer will
-// result in compilation errors.
-type UnsafeExtraServiceServer interface {
-	mustEmbedUnimplementedExtraServiceServer()
-}
-
-func RegisterExtraServiceServer(s grpc.ServiceRegistrar, srv ExtraServiceServer) {
-	s.RegisterService(&ExtraService_ServiceDesc, srv)
-}
-
-func _ExtraService_Extra_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SampleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExtraServiceServer).Extra(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tutorial.ExtraService/Extra",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExtraServiceServer).Extra(ctx, req.(*SampleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// ExtraService_ServiceDesc is the grpc.ServiceDesc for ExtraService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var ExtraService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "tutorial.ExtraService",
-	HandlerType: (*ExtraServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Extra",
-			Handler:    _ExtraService_Extra_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "sample.proto",
+	Metadata: "sample/sample.proto",
 }

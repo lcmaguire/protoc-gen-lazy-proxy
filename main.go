@@ -30,6 +30,8 @@ func Generate(gen *protogen.Plugin) error {
 	gf := gen.NewGeneratedFile("lazyproxy/main.go", protogen.GoImportPath("."))
 	gf.P("package main")
 
+	// gen.Files[0].
+
 	for _, file := range gen.Files {
 		pkgName := getParamPKG(file.GoDescriptorIdent.GoImportPath.String())
 		connectPkgName := "/" + pkgName + "connect"
@@ -69,7 +71,6 @@ func Generate(gen *protogen.Plugin) error {
 			sInfo.Methods = methodInformation
 			serviceInfo = append(serviceInfo, sInfo)
 		}
-
 	}
 
 	// todo have imports be sorted
