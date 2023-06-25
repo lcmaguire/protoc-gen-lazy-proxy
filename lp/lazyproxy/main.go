@@ -1,6 +1,16 @@
 package main
 
 import (
+	v1 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
+	v1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1/v1connect"
+)
+
+// proto ident v1.
+// connectImport ident v1connect.
+// req ident v1.SampleRequest
+// res ident v1.SampleResponse
+
+import (
 	"context"
 	"crypto/x509"
 	"log"
@@ -16,14 +26,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/sampleconnect"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example/exampleconnect"
-
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example"
 )
 
 func main() {
@@ -33,9 +35,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle(exampleconnect.NewExtraServiceHandler(newExtraService()))
-
-	mux.Handle(sampleconnect.NewSampleServiceHandler(newSampleService()))
+	mux.Handle(v1connect.NewSampleServiceHandler(newSampleService()))
 
 	err := http.ListenAndServe(
 		"localhost:8080", // todo have this be set by an env var
@@ -66,30 +66,6 @@ func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
 }
 
-func newExtraService() *ExtraService {
-	targetURL := os.Getenv("ExtraService")
-	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
-	if err != nil {
-		panic(err)
-	}
-	return &ExtraService{
-		ExtraServiceClient: example.NewExtraServiceClient(cliConn),
-	}
-}
-
-type ExtraService struct {
-	exampleconnect.UnimplementedExtraServiceHandler
-	example.ExtraServiceClient
-}
-
-func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[example.ExtraRequest]) (*connect.Response[example.ExtraResponse], error) {
-	ctx = headerToContext(ctx, req.Header())
-	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
-	return &connect.Response[example.ExtraResponse]{
-		Msg: res,
-	}, err
-}
-
 func newSampleService() *SampleService {
 	targetURL := os.Getenv("SampleService")
 	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
@@ -97,19 +73,19 @@ func newSampleService() *SampleService {
 		panic(err)
 	}
 	return &SampleService{
-		SampleServiceClient: sample.NewSampleServiceClient(cliConn),
+		SampleServiceClient: v1.NewSampleServiceClient(cliConn),
 	}
 }
 
 type SampleService struct {
-	sampleconnect.UnimplementedSampleServiceHandler
-	sample.SampleServiceClient
+	v1connect.UnimplementedSampleServiceHandler
+	v1.SampleServiceClient
 }
 
-func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
+func (s *SampleService) Sample(ctx context.Context, req *connect.Request[v1.SampleRequest]) (*connect.Response[v1.SampleResponse], error) {
 	ctx = headerToContext(ctx, req.Header())
 	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
-	return &connect.Response[sample.SampleResponse]{
+	return &connect.Response[v1.SampleResponse]{
 		Msg: res,
 	}, err
 }

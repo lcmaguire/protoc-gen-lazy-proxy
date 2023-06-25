@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: sample/sample.proto
+// source: sample/v1/sample.proto
 
-package sample
+package v1
 
 import (
 	context "context"
@@ -35,7 +35,7 @@ func NewSampleServiceClient(cc grpc.ClientConnInterface) SampleServiceClient {
 
 func (c *sampleServiceClient) Sample(ctx context.Context, in *SampleRequest, opts ...grpc.CallOption) (*SampleResponse, error) {
 	out := new(SampleResponse)
-	err := c.cc.Invoke(ctx, "/sample.SampleService/Sample", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/sample.v1.SampleService/Sample", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _SampleService_Sample_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/sample.SampleService/Sample",
+		FullMethod: "/sample.v1.SampleService/Sample",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SampleServiceServer).Sample(ctx, req.(*SampleRequest))
@@ -92,7 +92,7 @@ func _SampleService_Sample_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SampleService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "sample.SampleService",
+	ServiceName: "sample.v1.SampleService",
 	HandlerType: (*SampleServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -101,5 +101,5 @@ var SampleService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "sample/sample.proto",
+	Metadata: "sample/v1/sample.proto",
 }

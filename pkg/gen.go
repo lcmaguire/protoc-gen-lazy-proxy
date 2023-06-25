@@ -18,15 +18,16 @@ func Generate(gen *protogen.Plugin) error {
 	gf.P("package main")
 
 	for _, file := range gen.Files {
-		pkgName := getParamPKG(file.GoDescriptorIdent.GoImportPath.String())
-		connectPkgName := "/" + pkgName + "connect"
-		connectImport := protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath + protogen.GoImportPath(connectPkgName)}.GoImportPath.String()
-		protoImport := protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath}.GoImportPath.String()
-
-		imports[connectImport] = connectImport
-		imports[protoImport] = protoImport
-
 		for _, service := range file.Services {
+
+			pkgName := getParamPKG(file.GoDescriptorIdent.GoImportPath.String())
+			connectPkgName := "/" + pkgName + "connect"
+			protoIdent := gf.QualifiedGoIdent(protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath})
+			gf.P("// proto ident " + protoIdent)
+
+			connectIdent := gf.QualifiedGoIdent(protogen.GoIdent{GoImportPath: file.GoDescriptorIdent.GoImportPath + protogen.GoImportPath(connectPkgName)})
+			gf.P("// connectImport ident " + connectIdent)
+
 			serviceName := string(service.Desc.Name())
 			sInfo := LazyProxyServiceInfo{
 				ServiceName: serviceName,
@@ -40,9 +41,14 @@ func Generate(gen *protogen.Plugin) error {
 					break
 				}
 
-				// Note need to import req / res if it is different
-				requestType := getParamPKG(method.Input.GoIdent.GoImportPath.String()) + "." + string(method.Input.Desc.Name())
-				responseType := getParamPKG(method.Output.GoIdent.GoImportPath.String()) + "." + string(method.Output.Desc.Name())
+				reqIdent := gf.QualifiedGoIdent(method.Input.GoIdent)
+				resIdent := gf.QualifiedGoIdent(method.Output.GoIdent)
+				gf.P("// req ident " + reqIdent)
+				gf.P("// res ident " + resIdent)
+
+				//imports[method.Output.GoIdent.GoImportPath.String()] = method.Output.GoIdent.GoImportPath.String()
+				requestType := reqIdent  //+ "." + string(method.Input.Desc.Name())
+				responseType := resIdent //+ "." + string(method.Output.Desc.Name())
 
 				mInfo := LazyProxyMethodInfo{
 					ServiceName:  serviceName,
