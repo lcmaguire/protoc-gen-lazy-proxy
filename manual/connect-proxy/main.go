@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bufbuild/connect-go"
 	// grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
@@ -61,7 +62,8 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 }
 
 func newSampleService() *SampleService {
-	cliConn, err := grpcDial(os.Getenv("SampleService"), false)
+	targetURL := os.Getenv("SampleService")
+	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost"))
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +86,8 @@ func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.
 }
 
 func newExtraService() *ExtraService {
-	cliConn, err := grpcDial(os.Getenv("ExtraService"), false)
+	targetURL := os.Getenv("ExtraService")
+	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost"))
 	if err != nil {
 		panic(err)
 	}
