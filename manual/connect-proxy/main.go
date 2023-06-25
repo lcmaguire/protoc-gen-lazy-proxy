@@ -5,38 +5,38 @@ import (
 	"crypto/x509"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/bufbuild/connect-go"
-	grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample"
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample/sampleconnect"
+	// grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
+	"github.com/joho/godotenv"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample/sampleconnect"
+
+	"github.com/lcmaguire/protoc-gen-lazy-proxy/sample"
 )
 
 func main() {
-	mux := http.NewServeMux()
-
-	reflector := grpcreflect.NewStaticReflector(
-		"sample.SampleService",
-	)
-
-	mux.Handle(grpcreflect.NewHandlerV1(reflector))
-	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
-
-	sampleCliConn, err := grpcDial("localhost:8081", false)
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		panic(err)
 	}
 
+	mux := http.NewServeMux()
+
 	mux.Handle(
-		sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
+		sampleconnect.NewSampleServiceHandler(newSampleService()),
 	)
 
-	err = http.ListenAndServe(
+	mux.Handle(
+		sampleconnect.NewExtraServiceHandler(newExtraService()),
+	)
+
+	err := http.ListenAndServe(
 		"localhost:8080",
 		// For gRPC clients, it's convenient to support HTTP/2 without TLS. You can
 		// avoid x/net/http2 by using http.ListenAndServeTLS.
@@ -60,22 +60,47 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 	return grpc.Dial(targetURL, grpc.WithTransportCredentials(creds))
 }
 
-func newSampleService(cliConn *grpc.ClientConn) *sampleService {
-	return &sampleService{
-		cli: sample.NewSampleServiceClient(cliConn),
+func newSampleService() *SampleService {
+	cliConn, err := grpcDial(os.Getenv("SampleService"), false)
+	if err != nil {
+		panic(err)
+	}
+	return &SampleService{
+		SampleServiceClient: sample.NewSampleServiceClient(cliConn),
 	}
 }
 
-// for all services in proto gen this + grpc code.
-type sampleService struct {
+type SampleService struct {
 	sampleconnect.UnimplementedSampleServiceHandler
-	cli sample.SampleServiceClient
+	sample.SampleServiceClient
 }
 
-func (s *sampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
+func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
 	// todo pass req.Header() -> ctx
-	// for headers desired, get -> write to outgoing metadata
-	res, err := s.cli.Sample(ctx, req.Msg)
+	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
+	return &connect.Response[sample.SampleResponse]{
+		Msg: res,
+	}, err
+}
+
+func newExtraService() *ExtraService {
+	cliConn, err := grpcDial(os.Getenv("ExtraService"), false)
+	if err != nil {
+		panic(err)
+	}
+	return &ExtraService{
+		ExtraServiceClient: sample.NewExtraServiceClient(cliConn),
+	}
+}
+
+type ExtraService struct {
+	sampleconnect.UnimplementedExtraServiceHandler
+	sample.ExtraServiceClient
+}
+
+func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[sample.SampleRequest]) (*connect.Response[sample.SampleResponse], error) {
+	// todo pass req.Header() -> ctx
+	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
 	return &connect.Response[sample.SampleResponse]{
 		Msg: res,
 	}, err
