@@ -80,12 +80,6 @@ func Generate(gen *protogen.Plugin) error {
 		gf.P(str)
 	}
 
-	/*
-		for _, method := range methodInformation {
-			str := ExecuteTemplate(LazyProxyMethod, method)
-			gf.P(str)
-		}*/
-
 	return nil
 }
 
