@@ -2,7 +2,7 @@
 //
 // Source: sample/v1/sample.proto
 
-package v1connect
+package samplev1connect
 
 import (
 	context "context"

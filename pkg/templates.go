@@ -9,13 +9,13 @@ func new{{.ServiceName}}() *{{.ServiceName}} {
 		panic(err)
 	}
 	return &{{.ServiceName}}{
-		{{.ServiceName}}Client: {{.Pkg}}.New{{.ServiceName}}Client(cliConn),
+		{{.ServiceName}}Client: {{.Pkg}}New{{.ServiceName}}Client(cliConn),
 	}
 }
 
 type {{.ServiceName}} struct {
-	{{.Pkg}}connect.Unimplemented{{.ServiceName}}Handler
-	{{.Pkg}}.{{.ServiceName}}Client
+	{{.ConnectPkg}}Unimplemented{{.ServiceName}}Handler
+	{{.Pkg}}{{.ServiceName}}Client
 }
 
 {{range  .Methods}}
@@ -34,6 +34,7 @@ func (s *{{.ServiceName}}) {{.MethodName}}(ctx context.Context, req *connect.Req
 type LazyProxyServiceInfo struct {
 	ServiceName string
 	Pkg         string
+	ConnectPkg  string
 	Methods     []LazyProxyMethodInfo
 }
 
@@ -70,10 +71,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-
-	{{range  .Imports}}
-	{{.}}
-	{{end}}
 )
 
 func main() {
@@ -83,7 +80,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	{{range  .Services}}
-		mux.Handle({{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}()))
+		mux.Handle({{.ConnectPkg}}New{{.ServiceName}}Handler(new{{.ServiceName}}()))
 	{{end}}
 
 	err := http.ListenAndServe(

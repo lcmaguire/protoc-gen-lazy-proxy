@@ -1,25 +1,17 @@
 package main
 
 import (
-	v1 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
-	v1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1/v1connect"
-)
-
-// proto ident v1.
-// connectImport ident v1connect.
-// req ident v1.SampleRequest
-// res ident v1.SampleResponse
-
-import (
 	"context"
 	"crypto/x509"
 	"log"
 	"net/http"
-	"strings"
 	"os"
+	"strings"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/joho/godotenv"
+	v1 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
+	samplev1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1/samplev1connect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -28,6 +20,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// connectFileName ? ident samplev1connect
+// generatedFilenamePrefixToSlash ? ident sample/v1/sample
+// connectPath ? ident sample/v1/samplev1connect
+// proto ident v1.
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
@@ -35,7 +32,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle(v1connect.NewSampleServiceHandler(newSampleService()))
+	mux.Handle(samplev1connect.NewSampleServiceHandler(newSampleService()))
 
 	err := http.ListenAndServe(
 		"localhost:8080", // todo have this be set by an env var
@@ -78,7 +75,7 @@ func newSampleService() *SampleService {
 }
 
 type SampleService struct {
-	v1connect.UnimplementedSampleServiceHandler
+	samplev1connect.UnimplementedSampleServiceHandler
 	v1.SampleServiceClient
 }
 
