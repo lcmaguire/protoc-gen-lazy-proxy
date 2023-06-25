@@ -24,12 +24,10 @@ func main() {
 
 	mux.Handle(
 		sampleconnect.NewSampleServiceHandler(newSampleService()),
-		// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
 	)
 
 	mux.Handle(
 		sampleconnect.NewExtraServiceHandler(newExtraService()),
-		// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
 	)
 
 	err := http.ListenAndServe(

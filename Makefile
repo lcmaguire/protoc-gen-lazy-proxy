@@ -12,6 +12,9 @@ protoc-sample:
 run-proxy:
 	go run manual/connect-proxy/main.go
 
+run-generated-proxy:
+	go run lp/lazyproxy/main.go
+
 run-grpc-server:
 	go run manual/grpc/main.go
 
