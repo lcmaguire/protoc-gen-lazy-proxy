@@ -5,6 +5,8 @@ import (
 	"crypto/x509"
 	"log"
 	"net/http"
+	"strings"
+	"os"
 
 	"github.com/bufbuild/connect-go"
 	// grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
@@ -31,7 +33,7 @@ func main() {
 	)
 
 	err := http.ListenAndServe(
-		"localhost:8080",
+		"localhost:8080", // todo have this be set by an env var
 		// For gRPC clients, it's convenient to support HTTP/2 without TLS. You can
 		// avoid x/net/http2 by using http.ListenAndServeTLS.
 		h2c.NewHandler(mux, &http2.Server{}),
@@ -55,7 +57,8 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 }
 
 func newSampleService() *SampleService {
-	cliConn, err := grpcDial("localhost:8081", false)
+	targetURL := os.Getenv("SampleService")
+	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
 	if err != nil {
 		panic(err)
 	}
@@ -78,7 +81,8 @@ func (s *SampleService) Sample(ctx context.Context, req *connect.Request[sample.
 }
 
 func newExtraService() *ExtraService {
-	cliConn, err := grpcDial("localhost:8081", false)
+	targetURL := os.Getenv("ExtraService")
+	cliConn, err := grpcDial(targetURL, strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
 	if err != nil {
 		panic(err)
 	}

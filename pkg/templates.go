@@ -58,9 +58,10 @@ import (
 	"crypto/x509"
 	"log"
 	"net/http"
+	"strings"
+	"os"
 
 	"github.com/bufbuild/connect-go"
-	// grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
