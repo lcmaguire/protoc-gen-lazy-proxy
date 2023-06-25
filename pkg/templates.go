@@ -77,7 +77,6 @@ func main() {
 	{{range  .Services}}
 		mux.Handle(
 			{{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}()),
-			// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
 		)
 	{{end}}
 
