@@ -49,14 +49,11 @@ func Generate(gen *protogen.Plugin) error {
 				reqIdent := gf.QualifiedGoIdent(method.Input.GoIdent)
 				resIdent := gf.QualifiedGoIdent(method.Output.GoIdent)
 
-				requestType := reqIdent  //+ "." + string(method.Input.Desc.Name())
-				responseType := resIdent //+ "." + string(method.Output.Desc.Name())
-
 				mInfo := LazyProxyMethodInfo{
 					ServiceName:  serviceName,
 					MethodName:   string(method.Desc.Name()),
-					RequestName:  string(requestType),
-					ResponseName: string(responseType),
+					RequestName:  string(reqIdent),
+					ResponseName: string(resIdent),
 				}
 
 				methodInformation = append(methodInformation, mInfo)
