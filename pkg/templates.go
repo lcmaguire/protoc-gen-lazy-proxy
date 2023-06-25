@@ -5,7 +5,11 @@ package pkg
 // todo handle creating grpcDial within this struct
 
 const LazyProxyService = `
-func new{{.ServiceName}}(cliConn *grpc.ClientConn) *{{.ServiceName}} {
+func new{{.ServiceName}}() *{{.ServiceName}} {
+	cliConn, err := grpcDial("localhost:8081", false)
+	if err != nil {
+		panic(err)
+	}
 	return &{{.ServiceName}}{
 		cli: {{.Pkg}}.New{{.ServiceName}}Client(cliConn),
 	}
@@ -83,28 +87,14 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
-	/* todo see if reflect can be added in too.
-	reflector := grpcreflect.NewStaticReflector(
-		"sample.SampleService", 
-	)
-
-	mux.Handle(grpcreflect.NewHandlerV1(reflector))
-	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
-	*/
-
 	{{range  .Services}}
-		sampleCliConn, err := grpcDial("localhost:8081", false) // todo make this dynamic
-		if err != nil {
-			panic(err)
-		}
-
 		mux.Handle(
-			{{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}(sampleCliConn)),
+			{{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}()),
 			// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
 		)
 	{{end}}
 
-	err = http.ListenAndServe(
+	err := http.ListenAndServe(
 		"localhost:8080",
 		// For gRPC clients, it's convenient to support HTTP/2 without TLS. You can
 		// avoid x/net/http2 by using http.ListenAndServeTLS.

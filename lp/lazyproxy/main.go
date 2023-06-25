@@ -30,17 +30,12 @@ func main() {
 	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 	*/
 
-	sampleCliConn, err := grpcDial("localhost:8081", false) // todo make this dynamic
-	if err != nil {
-		panic(err)
-	}
-
 	mux.Handle(
-		sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
+		sampleconnect.NewSampleServiceHandler(newSampleService()),
 		// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
 	)
 
-	err = http.ListenAndServe(
+	err := http.ListenAndServe(
 		"localhost:8080",
 		// For gRPC clients, it's convenient to support HTTP/2 without TLS. You can
 		// avoid x/net/http2 by using http.ListenAndServeTLS.
@@ -64,7 +59,12 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 	return grpc.Dial(targetURL, grpc.WithTransportCredentials(creds))
 }
 
-func newSampleService(cliConn *grpc.ClientConn) *SampleService {
+func newSampleService() *SampleService {
+	cliConn, err := grpcDial("localhost:8081", false)
+	if err != nil {
+		panic(err)
+	}
+
 	return &SampleService{
 		cli: sample.NewSampleServiceClient(cliConn),
 	}
