@@ -1,9 +1,6 @@
 package pkg
 
-// TODO decide either have one struct with n number of connections, or N number of structs with 1 connection.
-
-// todo handle creating grpcDial within this struct
-
+// LazyProxyService template for initialzing a grpc service and its methods for forwarding http1 traffic.
 const LazyProxyService = `
 func new{{.ServiceName}}() *{{.ServiceName}} {
 	targetURL := os.Getenv("{{.ServiceName}}")
@@ -33,12 +30,14 @@ func (s *{{.ServiceName}}) {{.MethodName}}(ctx context.Context, req *connect.Req
 
 `
 
+// LazyProxyServiceInfo  contains info for a service including its name, pkg and any methods.
 type LazyProxyServiceInfo struct {
 	ServiceName string
 	Pkg         string
 	Methods     []LazyProxyMethodInfo
 }
 
+// LazyProxyMethodInfo contains all info required for a method.
 type LazyProxyMethodInfo struct {
 	ServiceName  string
 	MethodName   string
@@ -46,11 +45,13 @@ type LazyProxyMethodInfo struct {
 	ResponseName string
 }
 
+// LazyProxyServerInfo contains the services it needs to run and any dynamic proto imports.
 type LazyProxyServerInfo struct {
 	Services []LazyProxyServiceInfo
 	Imports  []string
 }
 
+// LazyProxyServer Template for the server that will run the lazy proxy.
 const LazyProxyServer = `
 
 import (
@@ -107,6 +108,7 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 	return grpc.Dial(targetURL, grpc.WithTransportCredentials(creds))
 }
 
+// this should probably be handled by middleware, but lazy implementation for a lazy proxy.
 func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
 }

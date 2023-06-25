@@ -25,7 +25,6 @@ func run() error {
 	}
 
 	server := grpc.NewServer()
-	// services in your protoFile
 
 	sample.RegisterSampleServiceServer(server, &sampleService{})
 	reflection.Register(server) // this should perhaps be optional
