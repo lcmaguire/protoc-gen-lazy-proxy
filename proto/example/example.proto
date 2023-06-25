@@ -1,0 +1,16 @@
+syntax = "proto3";
+package example; 
+
+option go_package = "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example";
+
+service ExampleService {
+    rpc Example(ExampleRequest) returns (ExampleResponse);
+}
+
+message ExampleRequest {
+    string name = 1;
+}
+
+message ExampleResponse {
+    string name = 1;
+}

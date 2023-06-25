@@ -1,6 +1,8 @@
 package main
 
 import (
+	example "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example"
+	exampleconnect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example/exampleconnect"
 	v1 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1"
 	extrav1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1/extrav1connect"
 	v11 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
@@ -31,6 +33,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+
+	mux.Handle(exampleconnect.NewExampleServiceHandler(newExampleService()))
 
 	mux.Handle(extrav1connect.NewExtraServiceHandler(newExtraService()))
 
@@ -63,6 +67,30 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 // this should probably be handled by middleware, but lazy implementation for a lazy proxy.
 func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
+}
+
+func newExampleService() *ExampleService {
+	targetURL := os.Getenv("ExampleService")
+	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
+	if err != nil {
+		panic(err)
+	}
+	return &ExampleService{
+		ExampleServiceClient: example.NewExampleServiceClient(cliConn),
+	}
+}
+
+type ExampleService struct {
+	exampleconnect.UnimplementedExampleServiceHandler
+	example.ExampleServiceClient
+}
+
+func (s *ExampleService) Example(ctx context.Context, req *connect.Request[example.ExampleRequest]) (*connect.Response[example.ExampleResponse], error) {
+	ctx = headerToContext(ctx, req.Header())
+	res, err := s.ExampleServiceClient.Example(ctx, req.Msg)
+	return &connect.Response[example.ExampleResponse]{
+		Msg: res,
+	}, err
 }
 
 func newExtraService() *ExtraService {
