@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"flag"
-	"html/template"
+	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/lcmaguire/protoc-gen-lazy-proxy/pkg"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -70,16 +71,22 @@ func Generate(gen *protogen.Plugin) error {
 	}
 
 	// todo have imports be sorted
+	importArr := make([]string, 0, len(imports))
 	for _, v := range imports {
-		gf.P("import " + v)
+		importArr = append(importArr, v)
 	}
+	sort.SliceStable(importArr, func(i, j int) bool {
+		return importArr[i] > importArr[j]
+	})
+
 	// todo move to array to import all.
-	gf.P(`import "github.com/bufbuild/connect-go"`)
-	gf.P(`import "google.golang.org/grpc"`)
-	gf.P(`import "context"`)
+	//gf.P(`import "github.com/bufbuild/connect-go"`)
+	//gf.P(`import "google.golang.org/grpc"`)
+	//gf.P(`import "context"`)
 
 	serverInfo := pkg.LazyProxyServerInfo{
 		Services: serviceInfo,
+		Imports:  importArr,
 	}
 
 	str := ExecuteTemplate(pkg.LazyProxyServer, serverInfo)

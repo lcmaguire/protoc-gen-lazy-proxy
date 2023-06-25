@@ -5,7 +5,7 @@ package pkg
 // todo handle creating grpcDial within this struct
 
 const LazyProxyService = `
-func new{{.ServiceName}}Service(cliConn *grpc.ClientConn) *{{.ServiceName}} {
+func new{{.ServiceName}}(cliConn *grpc.ClientConn) *{{.ServiceName}} {
 	return &{{.ServiceName}}{
 		cli: {{.Pkg}}.New{{.ServiceName}}Client(cliConn),
 	}
@@ -56,9 +56,30 @@ type LazyProxyMethodInfo struct {
 
 type LazyProxyServerInfo struct {
 	Services []LazyProxyServiceInfo
+	Imports  []string
 }
 
 const LazyProxyServer = `
+
+import (
+	"context"
+	"crypto/x509"
+	"log"
+	"net/http"
+
+	"github.com/bufbuild/connect-go"
+	grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+
+	{{range  .Imports}}
+	{{.}}
+	{{end}}
+)
+
 func main() {
 	mux := http.NewServeMux()
 
