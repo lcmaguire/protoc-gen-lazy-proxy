@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"path"
-	"strings"
 	"text/template"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -91,9 +90,4 @@ func ExecuteTemplate(tplate string, data any) string {
 		panic(err)
 	}
 	return buffy.String()
-}
-
-func getParamPKG(in string) string {
-	arr := strings.Split(in, "/")
-	return strings.Trim(arr[len(arr)-1], `"`)
 }
