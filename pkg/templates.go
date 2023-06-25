@@ -1,6 +1,9 @@
 package pkg
 
 // TODO decide either have one struct with n number of connections, or N number of structs with 1 connection.
+
+// todo handle creating grpcDial within this struct
+
 const LazyProxyService = `
 func new{{.ServiceName}}Service(cliConn *grpc.ClientConn) *{{.ServiceName}} {
 	return &{{.ServiceName}}{
@@ -52,6 +55,7 @@ type LazyProxyMethodInfo struct {
 }
 
 type LazyProxyServerInfo struct {
+	Services []LazyProxyServiceInfo
 }
 
 const LazyProxyServer = `
@@ -67,16 +71,17 @@ func main() {
 	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 	*/
 
-	// for x do the following
-	sampleCliConn, err := grpcDial("localhost:8081", false) // todo make this dynamic
-	if err != nil {
-		panic(err)
-	}
+	{{range  .Services}}
+		sampleCliConn, err := grpcDial("localhost:8081", false) // todo make this dynamic
+		if err != nil {
+			panic(err)
+		}
 
-	mux.Handle(
-		{{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}(sampleCliConn)),
-		// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
-	)
+		mux.Handle(
+			{{.Pkg}}connect.New{{.ServiceName}}Handler(new{{.ServiceName}}(sampleCliConn)),
+			// sampleconnect.NewSampleServiceHandler(newSampleService(sampleCliConn)),
+		)
+	{{end}}
 
 	err = http.ListenAndServe(
 		"localhost:8080",

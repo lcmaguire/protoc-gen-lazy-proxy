@@ -78,6 +78,13 @@ func Generate(gen *protogen.Plugin) error {
 	gf.P(`import "google.golang.org/grpc"`)
 	gf.P(`import "context"`)
 
+	serverInfo := pkg.LazyProxyServerInfo{
+		Services: serviceInfo,
+	}
+
+	str := ExecuteTemplate(pkg.LazyProxyServer, serverInfo)
+	gf.P(str)
+
 	for _, service := range serviceInfo {
 		str := ExecuteTemplate(pkg.LazyProxyService, service)
 		gf.P(str)
