@@ -10,5 +10,5 @@ plugins:
     out: sample
     opt: paths=source_relative
   - name: lazy-proxy
-    out: sample
+    out: lp
     opt: paths=source_relative

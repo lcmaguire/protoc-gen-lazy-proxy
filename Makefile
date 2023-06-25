@@ -1,3 +1,14 @@
+
+buf:
+	go install . && buf generate
+
+protoc-sample:
+	go install . && \
+	protoc -I=sample \
+    --lazy-proxy_out=lp \
+	--lazy-proxy_opt=paths=source_relative \
+	sample/*.proto 
+
 run-proxy:
 	go run manual/connect-proxy/main.go
 

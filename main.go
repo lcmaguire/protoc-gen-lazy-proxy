@@ -59,7 +59,7 @@ func Generate(gen *protogen.Plugin) error {
 		}
 	}
 
-	gf := gen.NewGeneratedFile("lazyproxy/main.go", "")
+	gf := gen.NewGeneratedFile("lazyproxy/main.go", protogen.GoImportPath("."))
 	gf.P("package main")
 
 	for _, service := range serviceInfo {
