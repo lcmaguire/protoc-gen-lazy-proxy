@@ -109,6 +109,10 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 
 // this should probably be handled by middleware, but lazy implementation for a lazy proxy.
 func headerToContext(ctx context.Context, headers http.Header) context.Context {
-	return metadata.NewIncomingContext(ctx, metadata.MD(headers))
+	for k := range headers {
+		headers.Get(k)
+		ctx = metadata.AppendToOutgoingContext(ctx, k, headers.Get(k))
+	}
+	return ctx
 }
 `
