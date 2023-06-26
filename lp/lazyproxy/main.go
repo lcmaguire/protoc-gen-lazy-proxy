@@ -1,24 +1,21 @@
 package main
 
 import (
+	"context"
+	"crypto/x509"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/bufbuild/connect-go"
+	"github.com/joho/godotenv"
 	example "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example"
 	exampleconnect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example/exampleconnect"
 	v1 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1"
 	extrav1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1/extrav1connect"
 	v11 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
 	v1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1/v1connect"
-)
-
-import (
-	"context"
-	"crypto/x509"
-	"log"
-	"net/http"
-	"strings"
-	"os"
-
-	"github.com/bufbuild/connect-go"
-	"github.com/joho/godotenv"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -67,7 +64,6 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 // this should probably be handled by middleware, but lazy implementation for a lazy proxy.
 func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	for k := range headers {
-		headers.Get(k)
 		ctx = metadata.AppendToOutgoingContext(ctx, k, headers.Get(k))
 	}
 	return ctx
