@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 
-	"github.com/lcmaguire/protoc-gen-lazy-proxy/pkg"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )
@@ -15,6 +14,19 @@ func main() {
 	}.Run(func(gen *protogen.Plugin) error {
 		// this enables optional fields to be supported.
 		gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
-		return pkg.Generate(gen)
+		return play(gen)
 	})
+}
+
+func play(gen *protogen.Plugin) error {
+
+	mainImportPath := protogen.GoImportPath("")
+	file1 := gen.NewGeneratedFile("main.go", mainImportPath)
+
+	file1.P("package main")
+	//file1.P("// " + mainImportPath.String())
+	file1.P("// " + mainImportPath)
+	//file1.P("// " + mainImportPath.Ident("").String())
+
+	return nil
 }
