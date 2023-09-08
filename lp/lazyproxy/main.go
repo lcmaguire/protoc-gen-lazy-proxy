@@ -1,18 +1,21 @@
 package main
 
 import (
+	example "github.com/lcmaguire/protoc-gen-lazy-proxy/example"
+	exampleconnect "github.com/lcmaguire/protoc-gen-lazy-proxy/example/exampleconnect"
+)
+
+import (
 	"context"
 	"crypto/x509"
 	"log"
 	"net/http"
-	"os"
 	"strings"
+	"os"
 
+	"github.com/rs/cors"
 	"connectrpc.com/connect"
 	"github.com/joho/godotenv"
-	example "github.com/lcmaguire/protoc-gen-lazy-proxy/example"
-	exampleconnect "github.com/lcmaguire/protoc-gen-lazy-proxy/example/exampleconnect"
-	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -63,32 +66,6 @@ func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	return ctx
 }
 
-// cors
-
-func newExampleService() *ExampleService {
-	targetURL := os.Getenv("ExampleService")
-	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
-	if err != nil {
-		panic(err)
-	}
-	return &ExampleService{
-		ExampleServiceClient: example.NewExampleServiceClient(cliConn),
-	}
-}
-
-type ExampleService struct {
-	exampleconnect.UnimplementedExampleServiceHandler
-	example.ExampleServiceClient
-}
-
-func (s *ExampleService) Example(ctx context.Context, req *connect.Request[example.ExampleRequest]) (*connect.Response[example.ExampleResponse], error) {
-	ctx = headerToContext(ctx, req.Header())
-	res, err := s.ExampleServiceClient.Example(ctx, req.Msg)
-	return &connect.Response[example.ExampleResponse]{
-		Msg: res,
-	}, err
-}
-
 func newCORS() *cors.Cors {
 	// To let web developers play with the demo service from browsers, we need a
 	// very permissive CORS setup.
@@ -122,4 +99,28 @@ func newCORS() *cors.Cors {
 			"Access-Control-Allow-Origin",
 		},
 	})
+}
+
+func newExampleService() *ExampleService {
+	targetURL := os.Getenv("ExampleService")
+	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
+	if err != nil {
+		panic(err)
+	}
+	return &ExampleService{
+		ExampleServiceClient: example.NewExampleServiceClient(cliConn),
+	}
+}
+
+type ExampleService struct {
+	exampleconnect.UnimplementedExampleServiceHandler
+	example.ExampleServiceClient
+}
+
+func (s *ExampleService) Example(ctx context.Context, req *connect.Request[example.ExampleRequest]) (*connect.Response[example.ExampleResponse], error) {
+	ctx = headerToContext(ctx, req.Header())
+	res, err := s.ExampleServiceClient.Example(ctx, req.Msg)
+	return &connect.Response[example.ExampleResponse]{
+		Msg: res,
+	}, err
 }
