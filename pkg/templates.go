@@ -63,7 +63,7 @@ import (
 	"strings"
 	"os"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/joho/godotenv"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -115,4 +115,7 @@ func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	}
 	return ctx
 }
+
+// cors
+
 `

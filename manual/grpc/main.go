@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	sample "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
+	example "github.com/lcmaguire/protoc-gen-lazy-proxy/example"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func run() error {
 
 	server := grpc.NewServer()
 
-	sample.RegisterSampleServiceServer(server, &sampleService{})
+	example.RegisterExampleServiceServer(server, &exampleService{})
 	reflection.Register(server) // this should perhaps be optional
 
 	log.Println("Listening on", listenOn)
@@ -37,10 +37,10 @@ func run() error {
 	return nil
 }
 
-type sampleService struct {
-	sample.UnimplementedSampleServiceServer
+type exampleService struct {
+	example.UnimplementedExampleServiceServer
 }
 
-func (s *sampleService) Sample(ctx context.Context, req *sample.SampleRequest) (*sample.SampleResponse, error) {
-	return &sample.SampleResponse{Name: req.Name + " is what you sent"}, nil
+func (s *exampleService) Example(ctx context.Context, req *example.ExampleRequest) (*example.ExampleResponse, error) {
+	return &example.ExampleResponse{Name: req.Name + " is what you sent"}, nil
 }
