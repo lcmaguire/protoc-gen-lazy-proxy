@@ -1,21 +1,21 @@
 package main
 
 import (
+	example "github.com/lcmaguire/protoc-gen-lazy-proxy/example"
+	exampleconnect "github.com/lcmaguire/protoc-gen-lazy-proxy/example/exampleconnect"
+)
+
+import (
 	"context"
 	"crypto/x509"
 	"log"
 	"net/http"
-	"os"
 	"strings"
+	"os"
 
-	"github.com/bufbuild/connect-go"
+	"github.com/rs/cors"
+	"connectrpc.com/connect"
 	"github.com/joho/godotenv"
-	example "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example"
-	exampleconnect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/example/exampleconnect"
-	v1 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1"
-	extrav1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/extra/v1/extrav1connect"
-	v11 "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1"
-	v1connect "github.com/lcmaguire/protoc-gen-lazy-proxy/proto/sample/v1/v1connect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -33,15 +33,11 @@ func main() {
 
 	mux.Handle(exampleconnect.NewExampleServiceHandler(newExampleService()))
 
-	mux.Handle(extrav1connect.NewExtraServiceHandler(newExtraService()))
-
-	mux.Handle(v1connect.NewSampleServiceHandler(newSampleService()))
-
 	err := http.ListenAndServe(
 		"localhost:8080", // todo have this be set by an env var
 		// For gRPC clients, it's convenient to support HTTP/2 without TLS. You can
 		// avoid x/net/http2 by using http.ListenAndServeTLS.
-		h2c.NewHandler(mux, &http2.Server{}),
+		h2c.NewHandler(newCORS().Handler(mux), &http2.Server{}),
 	)
 	log.Fatalf("listen failed: " + err.Error())
 }
@@ -64,9 +60,45 @@ func grpcDial(targetURL string, secure bool) (*grpc.ClientConn, error) {
 // this should probably be handled by middleware, but lazy implementation for a lazy proxy.
 func headerToContext(ctx context.Context, headers http.Header) context.Context {
 	for k := range headers {
+		headers.Get(k)
 		ctx = metadata.AppendToOutgoingContext(ctx, k, headers.Get(k))
 	}
 	return ctx
+}
+
+func newCORS() *cors.Cors {
+	// To let web developers play with the demo service from browsers, we need a
+	// very permissive CORS setup.
+	return cors.New(cors.Options{
+		AllowedMethods: []string{
+			http.MethodHead,
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+		},
+		AllowOriginFunc: func(origin string) bool {
+			// Allow all origins, which effectively disables CORS.
+			return true
+		},
+		AllowedHeaders: []string{"*"},
+		ExposedHeaders: []string{
+			// Content-Type is in the default safelist.
+			"Accept",
+			"Accept-Encoding",
+			"Accept-Post",
+			"Connect-Accept-Encoding",
+			"Connect-Content-Encoding",
+			"Content-Encoding",
+			"Grpc-Accept-Encoding",
+			"Grpc-Encoding",
+			"Grpc-Message",
+			"Grpc-Status",
+			"Grpc-Status-Details-Bin",
+			"Access-Control-Allow-Origin",
+		},
+	})
 }
 
 func newExampleService() *ExampleService {
@@ -89,54 +121,6 @@ func (s *ExampleService) Example(ctx context.Context, req *connect.Request[examp
 	ctx = headerToContext(ctx, req.Header())
 	res, err := s.ExampleServiceClient.Example(ctx, req.Msg)
 	return &connect.Response[example.ExampleResponse]{
-		Msg: res,
-	}, err
-}
-
-func newExtraService() *ExtraService {
-	targetURL := os.Getenv("ExtraService")
-	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
-	if err != nil {
-		panic(err)
-	}
-	return &ExtraService{
-		ExtraServiceClient: v1.NewExtraServiceClient(cliConn),
-	}
-}
-
-type ExtraService struct {
-	extrav1connect.UnimplementedExtraServiceHandler
-	v1.ExtraServiceClient
-}
-
-func (s *ExtraService) Extra(ctx context.Context, req *connect.Request[v1.ExtraRequest]) (*connect.Response[v1.ExtraResponse], error) {
-	ctx = headerToContext(ctx, req.Header())
-	res, err := s.ExtraServiceClient.Extra(ctx, req.Msg)
-	return &connect.Response[v1.ExtraResponse]{
-		Msg: res,
-	}, err
-}
-
-func newSampleService() *SampleService {
-	targetURL := os.Getenv("SampleService")
-	cliConn, err := grpcDial(targetURL, !strings.Contains(targetURL, "localhost")) // this could be annoying for certain users.
-	if err != nil {
-		panic(err)
-	}
-	return &SampleService{
-		SampleServiceClient: v11.NewSampleServiceClient(cliConn),
-	}
-}
-
-type SampleService struct {
-	v1connect.UnimplementedSampleServiceHandler
-	v11.SampleServiceClient
-}
-
-func (s *SampleService) Sample(ctx context.Context, req *connect.Request[v11.SampleRequest]) (*connect.Response[v11.SampleResponse], error) {
-	ctx = headerToContext(ctx, req.Header())
-	res, err := s.SampleServiceClient.Sample(ctx, req.Msg)
-	return &connect.Response[v11.SampleResponse]{
 		Msg: res,
 	}, err
 }
